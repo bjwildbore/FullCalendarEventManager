@@ -5,40 +5,44 @@
 		init : function( options ){
 			var $this = $(this);								
 				$this.opts = $.extend({}, $.fn.fui.defaults, options);
-			
-			$this.data('filterConfig', $this.opts.filters);
-			$this.addClass('fuiFilters');				
-			buildFilters($this);
-			configureEventHandlers($this);
-			applyCookiesAndDefaults($this);
-			changeFilterStatus($this);
 				
+			$this.data('eventsCache', []);
+			$this.data('calendarID' , $this.opts.fullCalendarID);	
+			$this.data('filterValues' , []);				
+					
 		},		
 
-		getFilterValues: function () {					
-			return getCurrentFilterValues($(this));			
-        }
+		applyFiltersToView: function (view) {					
+			return applyFiltersToView($(this),view);			
+        },		
+	
+		clearCache: function () {
+			return $this;
+		},
 		
 	};
 
+	function applyFiltersToView($this,view){
+		//console.log("applySettingsToCalendar");	
+		var aViewArray = cacheAndLoadMonth($this,view);
+		filterAndApplyArray($this,aViewArray );
+	
+	}		
 
-function loadMonth(){
+	function cacheAndLoadMonth($this,view){
 	    //console.log("loadMonth");
-	    var viewObj = $('#calendar').fullCalendar('getView');
-	    var visStart = viewObj.visStart;  
-	    var visEnd = viewObj.visEnd;  
-		
-		var calDate = new XDate($('#calendar').fullCalendar('getDate'));
-		var thisViewCode= viewObj.name+"_"+calDate.toString("yyyy_MM");	
-			
-	    var start = new Date().getTime();	
-		
-		//check for month array in page array
-		var aViewArray = aEvents[thisViewCode];
+	    
+	    var visStart = view.visStart,
+			visEnd = view.visEnd,
+			eventsCache = $this.data('eventsCache'),	
+			calDate = new XDate($('#calendar').fullCalendar('getDate')),	
+			thisViewCode= view.name+"_"+calDate.toString("yyyy_MM"),
+			aViewArray = eventsCache[thisViewCode];
 						
 		if(!aViewArray ){	
-		  aViewArray = getMonthArray(calDate,visStart,visEnd);			  
-		  aEvents[thisViewCode] = aViewArray; 		  
+			aViewArray = getMonthArray($this, visStart,visEnd);			  
+			eventsCache[thisViewCode] = aViewArray;
+			$this.data('eventsCache', eventsCache); 		  
 		}	
 		//console.log(aEvents);		
         //console.log(aViewArray );	
@@ -46,32 +50,17 @@ function loadMonth(){
 	}
 
 
-	function getMonthArray(d,visStart,visEnd){
+	function getMonthArray($this,visStart,visEnd){
 	    //console.log("getMonthArray");	    
 
 		var aTmp = {};
-		aTmp.dates = [];
-		aTmp.resources = [];
-		aTmp.availability = [];	
-		aTmp.courses = [];
 
-		/*		
-		aTmp.courses = {};	
+		//loop over sources and run retrieval functions	
+		//run sources retrievefunction
 		
-		for ( var i=0, len=oFilters.region.dictionary.length; i<len; ++i ){	
-			aTmp.courses[oFilters.region.dictionary[i].id] = {};
-			for ( var j=0, jlen=oFilters.status.dictionary.length; j<jlen; ++j ){				
-				aTmp.courses[oFilters.region.dictionary[i].id][oFilters.status.dictionary[j].title] = new Array();
-			}
-
-		}
-		*/
-		
-
-		aTmp.courses = addCourses(visStart,visEnd);		
-		aTmp.dates = addDates(visStart,visEnd);
-		aTmp.availability = addAvailability(visStart,visEnd);		
-		aTmp.resources = addResources(visStart,visEnd);
+		if (typeof $this.opts.retrieveSourceArrays === "function") {
+            aTmp = $this.opts.retrieveSourceArrays.call(this, $this, visStart, visEnd)) 
+        }
 		
 		return aTmp ;
 	}
@@ -81,218 +70,7 @@ function loadMonth(){
 
 
 
-	function addDates(dStart,dEnd){
-	   
-
-		var thisItem =  new CalendarItem();
-		var tmpStr = "";
-		var aTmp = [];
-		var sReportStartDate = dStart.getFullYear() +'-' + (dStart.getMonth()+1) +'-' + dStart.getDate();		
-
-		var sReportEndDate = dEnd.getFullYear() +'-' + (dEnd.getMonth()+1) +'-' + dEnd.getDate();
-		//console.log('<Query><Where><And><Geq><FieldRef Name="End_x0020_date" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="Start_x0020_date" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where>');
-
-		$().SPServices({
-		    operation: "GetListItems",
-		    async: false,
-		    listName: "clinical_date",
-			CAMLQuery: '<Query><Where><And><Geq><FieldRef Name="EndDate" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="StartDate" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where></Query>',
-
-		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /><FieldRef Name='Region' /><FieldRef Name='Location' /></ViewFields>",
-		    completefunc: function (xData, Status) {
-
-		     $(xData.responseXML).SPFilterNode("z:row").each(function() { 
-				
-				thisItem = new CalendarItem();
-				thisItem.id = $(this).attr("ows_ID");
-				thisItem.title = $(this).attr("ows_Title");
-				thisItem.category = "dates";			
-
-				thisItem.sort = 1;
-				thisItem.region = formatOWSItem($(this).attr("ows_Region"),0);					
-				thisItem.location = formatOWSItem($(this).attr("ows_Location"),0);				
-				thisItem.url = "/Training/TrainingTeam/Lists/OtherDates/DispForm.aspx?ID="+$(this).attr("ows_ID");
-				
-				thisItem.start =  $(this).attr("ows_StartDate");
-				thisItem.end = $(this).attr("ows_EndDate");
-				
-				thisItem.className = "item_" + thisItem.category;
-									
-
-				aTmp.push(thisItem); 				
-					
-		      });
-
-		    }
-	  	});
-	  	  	
-	  	return aTmp;
-
-	}
-
-
-
-function addAvailability(dStart,dEnd){
-	   
-
-		var thisItem =  new CalendarItem();
-		var tmpStr = "";
-		var aTmp = [];
-		var sReportStartDate = dStart.getFullYear() +'-' + (dStart.getMonth()+1) +'-' + dStart.getDate();		
-
-		var sReportEndDate = dEnd.getFullYear() +'-' + (dEnd.getMonth()+1) +'-' + dEnd.getDate();
-		//console.log('<Query><Where><And><Geq><FieldRef Name="End_x0020_date" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="Start_x0020_date" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where>');
-
-		$().SPServices({
-		    operation: "GetListItems",
-		    async: false,
-		    listName: "clinical_availability",
-			CAMLQuery: '<Query><Where><And><Geq><FieldRef Name="EndDate" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="StartDate" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where></Query>',
-
-		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /><FieldRef Name='Region' /><FieldRef Name='Location' /></ViewFields>",
-		    completefunc: function (xData, Status) {
-
-		     $(xData.responseXML).SPFilterNode("z:row").each(function() { 
-				
-				thisItem = new CalendarItem();
-				thisItem.id = $(this).attr("ows_ID");
-				thisItem.title = $(this).attr("ows_Title");
-				thisItem.category = "availability";	
-				thisItem.tutor =formatOWSItem($(this).attr("ows_Tutor"),0);
-
-				thisItem.sort = 2;						
-				thisItem.url = "/Training/TrainingTeam/Lists/OtherDates/DispForm.aspx?ID="+$(this).attr("ows_ID");
-
-				thisItem.start =  $(this).attr("ows_StartDate");
-				thisItem.end = $(this).attr("ows_EndDate");					
-				
-				thisItem.className = "item_" + thisItem.category;
-
-				aTmp.push(thisItem); 				
-					
-		      });
-
-		    }
-	  	});
-	  	  	
-	  	return aTmp;
-
-	}
-
-function addResources(dStart,dEnd){
-	   
-
-		var thisItem =  new CalendarItem();
-		var tmpStr = "";
-		var aTmp = [];
-		var sReportStartDate = dStart.getFullYear() +'-' + (dStart.getMonth()+1) +'-' + dStart.getDate();		
-
-		var sReportEndDate = dEnd.getFullYear() +'-' + (dEnd.getMonth()+1) +'-' + dEnd.getDate();
-		//console.log('<Query><Where><And><Geq><FieldRef Name="End_x0020_date" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="Start_x0020_date" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where>');
-
-		$().SPServices({
-		    operation: "GetListItems",
-		    async: false,
-		    listName: "clinical_resource",
-			CAMLQuery: '<Query><Where><And><Geq><FieldRef Name="EndDate" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="StartDate" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where></Query>',
-
-		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /><FieldRef Name='Region' /><FieldRef Name='Location' /></ViewFields>",
-		    completefunc: function (xData, Status) {
-
-		     $(xData.responseXML).SPFilterNode("z:row").each(function() { 
-				
-				thisItem = new CalendarItem();
-				thisItem.id = $(this).attr("ows_ID");
-				thisItem.title = $(this).attr("ows_Title");
-				thisItem.category = "resources";			
-
-				thisItem.sort = 4;						
-				thisItem.url = "/Training/TrainingTeam/Lists/OtherDates/DispForm.aspx?ID="+$(this).attr("ows_ID");
-
-				thisItem.start =  $(this).attr("ows_StartDate");
-				thisItem.end = $(this).attr("ows_EndDate");					
-				
-				thisItem.className = "item_" + thisItem.category;
-
-				aTmp.push(thisItem); 				
-					
-		      });
-
-		    }
-	  	});
-	  	  	
-	  	return aTmp;
-
-	}
-
-
-
-
-function addCourses(dStart,dEnd){	   
-
-		var thisItem =  new CalendarItem();
-		var tmpStr = "";
-		var aTmp = {};
-		var sReportStartDate = dStart.getFullYear() +'-' + (dStart.getMonth()+1) +'-' + dStart.getDate();		
-
-		var sReportEndDate = dEnd.getFullYear() +'-' + (dEnd.getMonth()+1) +'-' + dEnd.getDate();
-		//console.log('<Query><Where><And><Geq><FieldRef Name="End_x0020_date" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="Start_x0020_date" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where>');
-
-		for (var i = 0; i < oFilters.region.dictionary.length; i++){	
-			aTmp["region_" + oFilters.region.dictionary[i].id ] = [];
-		}	
-
-		$().SPServices({
-		    operation: "GetListItems",
-		    async: false,
-		    listName: "clinical_course",
-			CAMLQuery: '<Query><Where><And><Geq><FieldRef Name="EndDate" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="StartDate" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where></Query>',
-
-		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /><FieldRef Name='Region' /><FieldRef Name='Tutors' /><FieldRef Name='CourseType' /><FieldRef Name='Status' /><FieldRef Name='Location' /></ViewFields>",
-		    completefunc: function (xData, Status) {
-
-		     $(xData.responseXML).SPFilterNode("z:row").each(function() { 
-				
-				thisItem = new CalendarItem();
-				thisItem.id = $(this).attr("ows_ID");
-				thisItem.title = $(this).attr("ows_Title");							
-				thisItem.category = "courses";
-				thisItem.type = formatOWSItem($(this).attr("ows_CourseType"),0);
-				thisItem.status = $(this).attr("ows_Status");
-				thisItem.region = formatOWSItem($(this).attr("ows_Region"),0);
-				thisItem.location = formatOWSItem($(this).attr("ows_Location"),0);
-				thisItem.tutor =  formatOWSItem($(this).attr("ows_Tutors"),0);
-				
-				thisItem.sort = 3;						
-				thisItem.url = "/Training/TrainingTeam/Lists/OtherDates/DispForm.aspx?ID="+$(this).attr("ows_ID");
-
-				thisItem.start =  $(this).attr("ows_StartDate");
-				thisItem.end = $(this).attr("ows_EndDate");					
-				
-				thisItem.className = "item_" + thisItem.category + " item_" + thisItem.status;
-
-				aTmp["region_" + thisItem.region].push(thisItem); 	
-
-
-					
-		      });
-
-		    }
-	  	});
-	  	  	
-	  	return aTmp;
-
-	}
-	
-	
-	function applySettingsToCalendar(){
-		//console.log("applySettingsToCalendar");	
-		var aViewArray = loadMonth();
-		filterAndApplyArray(aViewArray );
-	
-	}
-
-function filterAndApplyArray(aViewArray){	
+function filterAndApplyArray($this,aViewArray){	
 	 //console.log("filterAndApplyArray");
 	
 	 var optionFilterValues = getFilterListValues("options"),
@@ -331,11 +109,8 @@ function filterAndApplyArray(aViewArray){
 	 		}	
 	 	} 	
 	 }
-	 	//filters all - region, location,  tutors
-	 	//filters courses - region, location, status, tutors, type
 
-		$('#calendar').fullCalendar ('removeEvents');
-		
+		$('#calendar').fullCalendar ('removeEvents');		
 		
 		for (property in oFilters) {
     		if (oFilters.hasOwnProperty(property)) {
@@ -432,7 +207,7 @@ function filterAndApplyArray(aViewArray){
 			});		
 		}
 		
-
+	
 		$('#calendar').fullCalendar('addEventSource', {	events: aFiltered });
 
 	}	
@@ -448,24 +223,22 @@ function filterAndApplyArray(aViewArray){
 	};
 	
 	// plugin defaults - added as a property on our plugin function
-	$.fn.fui.defaults = {		
-		title: 'Filters',
-		filters: [],
-		autosetCookies: true,
-		radioSelectedClass: 'icon-circle',
-		radioUnselectedClass: 'icon-circle-blank',
-		checkSelectedClass: 'icon-check-sign',
-		checkUnselectedClass: 'icon-check-empty',
-		expandClass: 'icon-angle-down',	
-		collapseClass: 'icon-angle-up',	
-		enabledClass:  'icon-circle',	
-		disabledClass: 'icon-ban-circle',			
-		status: true,
-		allowDisable: true,
-		enabled: true,
-		onFilterClick: function(){
+	$.fn.fui.defaults = {			
+		fullCalendarID: '',
+		onMonthLoad: function(){
 			return true;
+		},	
+
+		retrieveSourceArrays: function(visibleStart,visibleEnd){
+			alert('ERROR: No function to retrieve filter values specified');
+			return false;
 		}		
+		
+		retrieveFilterValues: function(){
+			alert('ERROR: No function to retrieve filter values specified');
+			return false;
+		}	
+		
 	};	
 
 })(jQuery);
