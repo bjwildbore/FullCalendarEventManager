@@ -91,23 +91,21 @@
 	
 
 
-	function addDates(dStart,dEnd){
-	   
 
-		var thisItem =  new CalendarItem();
-		var tmpStr = "";
-		var aTmp = [];
-		var sReportStartDate = dStart.getFullYear() +'-' + (dStart.getMonth()+1) +'-' + dStart.getDate();		
-
-		var sReportEndDate = dEnd.getFullYear() +'-' + (dEnd.getMonth()+1) +'-' + dEnd.getDate();
-		//console.log('<Query><Where><And><Geq><FieldRef Name="End_x0020_date" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="Start_x0020_date" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where>');
+	function addDates(dStart,dEnd){  
+		
+		var thisItem =  new CalendarItem(),
+			tmpStr = "",
+			aTmp = [],
+			sReportStartDate = dStart.getFullYear() +'-' + (dStart.getMonth()+1) +'-' + dStart.getDate(),
+			sReportEndDate = dEnd.getFullYear() +'-' + (dEnd.getMonth()+1) +'-' + dEnd.getDate();			
 
 		$().SPServices({
 		    operation: "GetListItems",
 		    async: false,
+			cacheXML:true,
 		    listName: "clinical_date",
 			CAMLQuery: '<Query><Where><And><Geq><FieldRef Name="EndDate" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="StartDate" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where></Query>',
-
 		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /><FieldRef Name='Region' /><FieldRef Name='Location' /></ViewFields>",
 		    completefunc: function (xData, Status) {
 
@@ -116,7 +114,7 @@
 				thisItem = new CalendarItem();
 				thisItem.id = $(this).attr("ows_ID");
 				thisItem.title = $(this).attr("ows_Title");
-				thisItem.category = "dates";			
+				thisItem.source = "dates";			
 
 				thisItem.sort = 1;
 				thisItem.region = formatOWSItem($(this).attr("ows_Region"),0);					
@@ -126,7 +124,7 @@
 				thisItem.start =  $(this).attr("ows_StartDate");
 				thisItem.end = $(this).attr("ows_EndDate");
 				
-				thisItem.className = "item_" + thisItem.category;
+				thisItem.className = "item_" + thisItem.source;
 									
 
 				aTmp.push(thisItem); 				
@@ -156,6 +154,7 @@ function addAvailability(dStart,dEnd){
 		$().SPServices({
 		    operation: "GetListItems",
 		    async: false,
+			cacheXML:true,
 		    listName: "clinical_availability",
 			CAMLQuery: '<Query><Where><And><Geq><FieldRef Name="EndDate" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="StartDate" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where></Query>',
 
@@ -167,7 +166,7 @@ function addAvailability(dStart,dEnd){
 				thisItem = new CalendarItem();
 				thisItem.id = $(this).attr("ows_ID");
 				thisItem.title = $(this).attr("ows_Title");
-				thisItem.category = "availability";	
+				thisItem.source = "availability";	
 				thisItem.tutor =formatOWSItem($(this).attr("ows_Tutor"),0);
 
 				thisItem.sort = 2;						
@@ -176,7 +175,7 @@ function addAvailability(dStart,dEnd){
 				thisItem.start =  $(this).attr("ows_StartDate");
 				thisItem.end = $(this).attr("ows_EndDate");					
 				
-				thisItem.className = "item_" + thisItem.category;
+				thisItem.className = "item_" + thisItem.source;
 
 				aTmp.push(thisItem); 				
 					
@@ -195,6 +194,7 @@ function addResources(dStart,dEnd){
 		var thisItem =  new CalendarItem();
 		var tmpStr = "";
 		var aTmp = [];
+		cacheXML:true,
 		var sReportStartDate = dStart.getFullYear() +'-' + (dStart.getMonth()+1) +'-' + dStart.getDate();		
 
 		var sReportEndDate = dEnd.getFullYear() +'-' + (dEnd.getMonth()+1) +'-' + dEnd.getDate();
@@ -214,7 +214,7 @@ function addResources(dStart,dEnd){
 				thisItem = new CalendarItem();
 				thisItem.id = $(this).attr("ows_ID");
 				thisItem.title = $(this).attr("ows_Title");
-				thisItem.category = "resources";			
+				thisItem.source = "resources";			
 
 				thisItem.sort = 4;						
 				thisItem.url = "/Training/TrainingTeam/Lists/OtherDates/DispForm.aspx?ID="+$(this).attr("ows_ID");
@@ -222,7 +222,7 @@ function addResources(dStart,dEnd){
 				thisItem.start =  $(this).attr("ows_StartDate");
 				thisItem.end = $(this).attr("ows_EndDate");					
 				
-				thisItem.className = "item_" + thisItem.category;
+				thisItem.className = "item_" + thisItem.source;
 
 				aTmp.push(thisItem); 				
 					
@@ -255,6 +255,7 @@ function addCourses(dStart,dEnd){
 		$().SPServices({
 		    operation: "GetListItems",
 		    async: false,
+			cacheXML:true,
 		    listName: "clinical_course",
 			CAMLQuery: '<Query><Where><And><Geq><FieldRef Name="EndDate" /><Value Type="DateTime">'+sReportStartDate +'</Value></Geq><Leq><FieldRef Name="StartDate" /><Value Type="DateTime">'+sReportEndDate +'</Value></Leq></And></Where></Query>',
 
@@ -266,7 +267,7 @@ function addCourses(dStart,dEnd){
 				thisItem = new CalendarItem();
 				thisItem.id = $(this).attr("ows_ID");
 				thisItem.title = $(this).attr("ows_Title");							
-				thisItem.category = "courses";
+				thisItem.source = "courses";
 				thisItem.type = formatOWSItem($(this).attr("ows_CourseType"),0);
 				thisItem.status = $(this).attr("ows_Status");
 				thisItem.region = formatOWSItem($(this).attr("ows_Region"),0);
@@ -279,7 +280,7 @@ function addCourses(dStart,dEnd){
 				thisItem.start =  $(this).attr("ows_StartDate");
 				thisItem.end = $(this).attr("ows_EndDate");					
 				
-				thisItem.className = "item_" + thisItem.category + " item_" + thisItem.status;
+				thisItem.className = "item_" + thisItem.source + " item_" + thisItem.status;
 
 				aTmp["region_" + thisItem.region].push(thisItem); 	
 
@@ -295,7 +296,127 @@ function addCourses(dStart,dEnd){
 	}
 	
 	
+	function getRegionsArrayFromSP(){
+	    console.log("getRegionsArrayFromSP");
+
+		var thisItem = new Object();
+		var aRet = new Array();
+
+		$().SPServices({
+		    operation: "GetListItems",
+		    async: false,		   	    
+		    listName: "clinical_region",		   
+		    completefunc: function (xData, Status) {
+		      $(xData.responseXML).SPFilterNode("z:row").each(function() {			
+				thisItem = {
+					id:$(this).attr("ows_ID"),
+					title:$(this).attr("ows_Title"),					
+				};	
+				aRet.push(thisItem);
+		      });
+		    }
+		    
+	  	});
+	  	
+	  	return aRet;
+	}// end buildFilterDataArray function
+
+
+	function getLocationsArrayFromSP(){
+		console.log("getLocationsArrayFromSP");
+
+		var thisItem = new Object();	
+		var aRet = new Array();
+
+		$().SPServices({
+		    operation: "GetListItems",
+		    async: false,
+		    listName: "clinical_location",
+		    CAMLQuery: '<Query><OrderBy><FieldRef Name="Title" /></OrderBy></Query>',
+		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /><FieldRef Name='Region' /></ViewFields>",
+		    completefunc: function (xData, Status) {
+		      console.log(xData.responseXML);
+		      $(xData.responseXML).SPFilterNode("z:row").each(function() {					thisItem = {
+					id:$(this).attr("ows_ID"),
+					title:$(this).attr("ows_Title"),
+					regionID:formatOWSItem($(this).attr("ows_Region"),0)
+
+				};
+				aRet.push(thisItem);
+		      });
+		    }
+	  	});
+	  	return aRet;
+
+	}
+
+
+
+	function getTutorsArrayFromSP(){
+		console.log("getTutorsArrayFromSP");
+
+		var thisItem = new Object();	
+		var aRet = new Array();
 	
+		var sQuery = '<Query><OrderBy><FieldRef Name="Title" /></OrderBy></Query>';
+		//console.log("getTutorsArrayFromSP");
+		
+		/*
+		thisItem = {
+			id:"0",
+			value:"_unassigned_",
+			title:"_unassigned_",					
+			regionID:"",
+			districtID:""			
+		};
+		
+		aRet.push(thisItem);	
+		*/
+	
+		$().SPServices({
+		    operation: "GetListItems",
+		    async: false,
+		    listName: "clinical_tutor",
+		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /></ViewFields>",
+		    CAMLQuery: sQuery ,
+		    completefunc: function (xData, Status) {
+		      $(xData.responseXML).SPFilterNode("z:row").each(function() {					
+				thisItem = {
+					id:$(this).attr("ows_ID"),					
+					title:$(this).attr("ows_Title")
+				};
+								
+				aRet.push(thisItem);				
+		     
+ 				});
+		    }
+	  	});	
+		return aRet;
+  	}
+
+	function getTypesArrayFromSP(){
+	    console.log("getTypesArrayFromSP");
+		var thisItem = new Object();
+		var aRet = new Array();
+			
+		$().SPServices({
+		    operation: "GetListItems",
+		    async: false,
+		    listName: "clinical_course_type",
+		    CAMLQuery: '<Query><OrderBy><FieldRef Name="Title" /></OrderBy></Query>',
+		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /></ViewFields>",
+		    completefunc: function (xData, Status) {
+		      $(xData.responseXML).SPFilterNode("z:row").each(function() {					thisItem = {
+					id:$(this).attr("ows_ID"),
+					title:$(this).attr("ows_Title")
+				};
+				aRet.push(thisItem);
+		      });
+		    }
+	  	});
+	  	return aRet;
+
+	}	
 	
 	
 	

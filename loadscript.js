@@ -3,44 +3,8 @@ $(document).ready(function()
 
 
 
-		
-	
-	
 
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-
-
-	
-	
-	
-
-	
-	
-
-
-
-
-jQuery.extend(jQuery.expr[':'], {
+	jQuery.extend(jQuery.expr[':'], {
 	  containsIgnoreCase: "(a.textContent||a.innerText||jQuery(a).text()||'').toLowerCase().indexOf((m[3]||'').toLowerCase())>=0"
 	});
 
@@ -48,8 +12,9 @@ jQuery.extend(jQuery.expr[':'], {
 
 
 	
-	var aViewArray = new Array();	
+	var aViewArray = new Array();
 
+	
 	var oFilters = {};
 	
 		oFilters.region = {};
@@ -58,7 +23,7 @@ jQuery.extend(jQuery.expr[':'], {
 		oFilters.region.values = 0;
 		oFilters.region.dictionary = [];
 		oFilters.region.applyGrep = true;
-		oFilters.region.applyTo = ["dates","availability", "resources"];
+		oFilters.region.applyTo = ["courses","dates","availability", "resources"];
 		// courses already filtered by region , not grep filtered
 
 		
