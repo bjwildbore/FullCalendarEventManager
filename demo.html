@@ -5,8 +5,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 	
-    <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
-	
+    <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>	
 	<script src="jQuery.FCEventManager.js"></script>
 	
 	
@@ -19,8 +18,51 @@
 	<script>
 
 
-		$(document).ready(function()
-		{		
+		$(document).ready(function(){
+			myView = {
+				visStart : new Date(),
+				visEnd : new Date(),
+				start : new Date(),
+				name : 'demo'
+			}
+		
+			$('#fcman').fcman({
+				retrieveSourceArrays: function(visibleStart,visibleEnd){
+					var oSources = {};
+					oSources.courses = [{id:'a',value:'b',source:'courses',region:'a'}];
+					oSources.events = [{id:'a',value:'b',source:'events',region:'b'}]
+					return oSources;
+				},		
+				
+				retrieveFilterObjects: function($this){
+					var oFilters = {};	
+						oFilters.sources = {};
+						oFilters.sources.key = 'sources';
+						oFilters.sources.status = 0;
+						oFilters.sources.values = 0;
+						oFilters.sources.dictionary = [];
+						oFilters.sources.numSelected = 1;
+						oFilters.sources.selectedArray = ['courses','events'];
+						oFilters.sources.applyGrep = true;
+						oFilters.sources.applyTo = ["courses","dates","availability", "resources"];
+						
+						oFilters.region = {};
+						oFilters.region.key = 'region';
+						oFilters.region.status = 0;
+						oFilters.region.values = ['a'];
+						oFilters.region.dictionary = [];
+						oFilters.region.numSelected = 1;
+						oFilters.region.selectedArray = ['courses','events'];
+						oFilters.region.applyGrep = true;
+						oFilters.region.applyTo = ["courses","events","availability", "resources"];						
+						
+						
+						
+					return oFilters
+				}	
+			
+			});
+			$('#fcman').fcman("applyFiltersToView",myView);
 
 		});
 	
@@ -28,7 +70,7 @@
   </head>
 
 <body >
-
+<div id='fcman'></div>
 	
 
 

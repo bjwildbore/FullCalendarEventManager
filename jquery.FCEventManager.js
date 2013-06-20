@@ -4,14 +4,14 @@
 	var methods = {
 		init : function( options ){
 			var $this = $(this);								
-				$this.opts = $.extend({}, $.fn.fui.defaults, options);
-				
+				$this.data('opts', $.extend({}, $.fn.fcman.defaults, options));				
 			$this.data('eventsCache', []);
-			$this.data('calendarID' , $this.opts.fullCalendarID);							
-					
+			$this.data('calendarID' , $this.data('opts').fullCalendarID);							
+			console.log('init');
+			console.log($this.data('opts'));			
 		},		
 
-		applyFiltersToView: function (view) {					
+		applyFiltersToView: function (view) {	
 			return applyFiltersToView($(this),view);			
         },		
 	
@@ -24,23 +24,33 @@
 	};
 
 	function applyFiltersToView($this,view){
-		//console.log("applySettingsToCalendar");	
-		var aViewArray = cacheAndLoadMonth($this,view);
+		console.log("applyFiltersToView");	
 		
-		filterAndApplyArray($this,aViewArray );
-	
+		var calendarSelector = "#" + $this.data('calendarID'),
+			aViewArray = cacheAndLoadMonth($this,view),		
+			aFiltered = filterArray($this,aViewArray );
+		/*
+		$(calendarSelector).fullCalendar ('removeEvents');
+		$(calendarSelector).fullCalendar('addEventSource', {	events: aFiltered });
+		*/
 	}		
 
 	function cacheAndLoadMonth($this,view){
 	    console.log("loadMonth");
-	    
+
 	    var visStart = view.visStart,
 			visEnd = view.visEnd,
 			eventsCache = $this.data('eventsCache'),
 			d = view.start,			
-			thisViewCode= view.name+"_"+ d.getFullYear()  +"_"+ (d.getMonth() + 1),
-			
+			thisViewCode= view.name+"_"+ d.getFullYear()  +"_"+ (d.getMonth() + 1),			
 			aViewArray = eventsCache[thisViewCode];	
+			
+			console.log("visStart",visStart);
+			console.log("visEnd",visEnd);
+			console.log("eventsCache",eventsCache);
+			console.log("d",d);
+			console.log("thisViewCode",thisViewCode);			
+			
 			
 		if(!aViewArray ){	
 			aViewArray = getMonthArray($this, visStart,visEnd);			  
@@ -66,76 +76,82 @@
 			aTmp.source2name = [calendarItem, calendarItem, calendarItem];
 			aTmp.source3name = [calendarItem, calendarItem, calendarItem];		
 		*/
-		
-		if (typeof $this.opts.retrieveSourceArrays === "function") {
-            aTmp = $this.opts.retrieveSourceArrays.call(this, $this, visStart, visEnd)) 
+		console.log($this.data('opts'));
+		if (typeof $this.data('opts').retrieveSourceArrays === "function") {
+            aTmp = $this.data('opts').retrieveSourceArrays.call(this, $this, visStart, visEnd); 
         }
 		
 		return aTmp ;
 	}
 
 
-function filterAndApplyArray($this,aSourceData,oFilters){	
-	 //console.log("filterAndApplyArray");
+function filterArray($this,aSourceData,oFilters){	
+	 console.log("filterArray");
 	
-	 var selectedSources = [],
-	 	 regionFilterValues = getFilterListValues("region"),
-	 	 aAppliedFilters = {},
-	 	 source = "",
-	 	 region = 0,
-	 	 property = '',
-	 	 filterItem = {},
-	 	 needle ="",
-	 	 haystack = "",	 	 
-	 	 i = 0,
-	 	 j = 0,
-		 oFilters = {},
-	 	 aFiltered = [],
-	 	 aTmp = [],
-		 oTmp = {};
+	var selectedSources = [],	 	
+		aAppliedFilters = {},	
+		sourceFilter = {},		 
+		source = "",
+		region = 0,
+		property = '',
+		filterItem = {},
+		needle ="",
+		haystack = "",	 	 
+		i = 0,
+		j = 0,
+		oFilters = {},
+		aFiltered = [],
+		aTmp = [],
+		oTmp = {};
 		 
-	$('#calendar').fullCalendar ('removeEvents');
+	console.log(aSourceData);
 		
-	if (typeof $this.opts.retrieveFilterObjects === "function") {
-        oFilters = $this.opts.retrieveFilterObjects.call(this, $this, visStart, visEnd));		
+	if (typeof $this.data('opts').retrieveFilterObjects === "function") {
+        oFilters = $this.data('opts').retrieveFilterObjects.call(this, $this);	
+			console.log('***')		;
+			console.log(oFilters)		;
     } else {
 		alert("ERROR: retrieveFilterObjects incorrectly specified");
+		return [];
 	}
 	
 	
-	sourceFilter = oFilters.sources;
+	sourceFilter = oFilters.sources;	
+	console.log(sourceFilter)
+	
 	//remove unselected sources to reduce filtering time
-	if (sourceFilter.numSelected === 0){
-		//nothing to show... were done here
-		return true;	
+	if (sourceFilter.numSelected === 0){		
+		return [];	
 	} else {
 		//add selected sources
 		 selectedSources = sourceFilter.selectedArray;
+		 console.log(sourceFilter.selectedArray)
 		 for (i = 0; i < selectedSources.length; i++){
-			sourceName = selectedSources[i];
-			if(aSourceData[sourceName].length){
-				oTmp[sourceName] = aSourceData[sourceName];
-				aAppliedFilters[sourceName] = [];   
+			source = selectedSources[i];
+			if(aSourceData[source].length){
+				oTmp[source] = aSourceData[source];
+				aAppliedFilters[source] = [];   
 			}		
 		}
-	}
-	
+	}	
 	//remove sources from the filters
 	delete oFilters.sources;	
 	
 	//loop over the filters and remove any redundant sources and list filter to apply to each source to reduce filtering time
 	for (property in oFilters) {
+		console.log('filterproperty', property)
 		if ( oFilters.hasOwnProperty(property) && property !== "sources") {		
 			filterItem = oFilters[property];
 			
 			if(filterItem.numSelected == 0){ //if none selected we dont want any showing so just remove applied sources from the oTmp array				
+				console.log('none selected')
 				for (j = 0; j < filterItem.applyTo.length; j++){
 					source = filterItem.applyTo[j];
 					delete oTmp[source];					
 					delete aAppliedFilters[source]; 
 				} 				
 			} else if(!filterItem.allSelected) {// if some selected	
-			
+				console.log('some selected')
 				for (j = 0; j < filterItem.applyTo.length; j++){
 					source = filterItem.applyTo[j];		
 					
@@ -146,13 +162,15 @@ function filterAndApplyArray($this,aSourceData,oFilters){
 				} 
 				
 			} else { //if all values selected do nothing as there is nothing to remove
+				console.log('all selected')
 				//do nothing
 			}
 			
 		}
 	}
 	
-
+	console.log('aTmp',oTmp);
+	console.log('aAppliedFilters',aAppliedFilters);
 	//add sources into array that is to be filtered
 	for (source in oTmp) {
 		aTmp = aTmp.concat(oTmp[source]);
@@ -174,6 +192,7 @@ function filterAndApplyArray($this,aSourceData,oFilters){
 					numOfNeedles = 0,
 					haystack = "",
 				    filters = aAppliedFilters[source];
+				console.log('source', source)
 				
 				if (!filters.length){
 					return true;
@@ -194,7 +213,7 @@ function filterAndApplyArray($this,aSourceData,oFilters){
 					//console.log('needle' );
 					//console.log(needle );
 					//console.log('haystack' );
-					//console.log(haystack);
+					console.log(haystack);
 
 					numOfNeedles = needle.length
 					if(numOfNeedles ==1){
@@ -235,11 +254,11 @@ function filterAndApplyArray($this,aSourceData,oFilters){
 		}
 		
 	
-		$('#calendar').fullCalendar('addEventSource', {	events: aFiltered });
+		return aFiltered;
 
 	}	
 
-	$.fn.fui = function(method) { 
+	$.fn.fcman = function(method) { 
 		if ( methods[method] ) {
 			return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ));
 		} else if ( typeof method === 'object' || ! method ) {
@@ -250,18 +269,20 @@ function filterAndApplyArray($this,aSourceData,oFilters){
 	};
 	
 	// plugin defaults - added as a property on our plugin function
-	$.fn.fui.defaults = {			
+	$.fn.fcman.defaults = {			
 		fullCalendarID: '',
 		onMonthLoad: function(){
 			return true;
 		},	
 
 		retrieveSourceArrays: function(visibleStart,visibleEnd){
+			console.log('ERROR: No function to retrieve filter values specified');
 			alert('ERROR: No function to retrieve filter values specified');
 			return false;
-		}		
+		},		
 		
 		retrieveFilterObjects: function(){
+			console.log('ERROR: No function to retrieve filter values specified');
 			alert('ERROR: No function to retrieve filter values specified');
 			return false;
 		}	
