@@ -172,6 +172,7 @@ function filterArray($this,aSourceData,oFilters){
 		source = '',		
 		property = '',
 		filterItem = {},
+		numSelected = 0,
 		i = 0,			
 		aFiltered = [],
 		aTmp = [],
@@ -187,15 +188,16 @@ function filterArray($this,aSourceData,oFilters){
 	
 	
 	sourceFilter = oFilters.sources;	
-	
+	selectedSources = sourceFilter.selectedArray;
+	numSelected = selectedSources.length;
 	//remove unselected sources to reduce filtering time
-	if (sourceFilter.numSelected === 0){		
+	if (numSelected === 0){		
 		return [];	
 	} else {
 		//add selected sources
 		selectedSources = sourceFilter.selectedArray;
 
-		for (i = 0; i < selectedSources.length; i++){
+		for (i = 0; i < numSelected; i++){
 			source = selectedSources[i];
 			if(aSourceData[source].length){
 				oTmp[source] = aSourceData[source];
@@ -209,10 +211,12 @@ function filterArray($this,aSourceData,oFilters){
 	//loop over the filters and remove any redundant sources and list filter to apply to each source to reduce filtering time
 	for (property in oFilters) {
 
-	if ( oFilters.hasOwnProperty(property) && property !== 'sources') {		
+	if ( oFilters.hasOwnProperty(property)) {		
 			filterItem = oFilters[property];
+			filterItem.key = property;
+			filterItem.numSelected = filterItem.selectedArray.length
 			
-			if(filterItem.numSelected === 0){ //if none selected we dont want any showing so just remove applied sources from the oTmp array				
+			if(filterItem.numSelected === 0){ //if none selected we dont want any showing so just remove applied sources from the oTmp array			
 
 				for (i = 0; i < filterItem.applyTo.length; i++){
 					source = filterItem.applyTo[i];
@@ -265,7 +269,7 @@ function filterArray($this,aSourceData,oFilters){
 				filter = filters[i];
 				
 				needle = element[filter.key]; // the data element value(s)
-				haystack = filter.values;     // the filters allowed value(s)
+				haystack = filter.selectedArray;     // the filters allowed value(s)
 
 				numOfNeedles = needle.length;
 				

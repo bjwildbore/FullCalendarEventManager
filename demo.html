@@ -58,24 +58,12 @@
 				
 				retrieveFilterObjects: function($this){
 					var oFilters = {};	
-						oFilters.sources = {};
-						oFilters.sources.key = 'sources';
-						oFilters.sources.status = 0;
-						oFilters.sources.values = 0;
-						oFilters.sources.dictionary = [];
-						oFilters.sources.numSelected = 1;
+						oFilters.sources = {};	
 						oFilters.sources.selectedArray = ['courses','events','dates'];
-						oFilters.sources.applyGrep = true;
-						oFilters.sources.applyTo = ["courses","dates","availability", "resources"];
 						
-						oFilters.region = {};
-						oFilters.region.key = 'region';
-						oFilters.region.status = 0;
-						oFilters.region.values = ['a'];
-						oFilters.region.dictionary = [];
-						oFilters.region.numSelected = 2;
-						oFilters.region.selectedArray = ['courses','events'];
-						oFilters.region.applyGrep = true;
+						
+						oFilters.region = {};						
+						oFilters.region.selectedArray = ['a',];
 						oFilters.region.applyTo = ["courses","events","availability", "resources"];						
 						
 					return oFilters
