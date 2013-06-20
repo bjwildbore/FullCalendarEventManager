@@ -31,8 +31,16 @@
 				afterInit: function($this){
 					var x = new Date();
 					$(this).fcman("prefetchMonth",x,'month');					
-				},
-			
+				},	
+				
+				afterFilter: function($this,aFiltered){
+					console.log('NOTE: afterFilter custom');
+					/*
+					$('#calendar').fullCalendar('removeEvents');
+					$('#calendar').fullCalendar('addEventSource', {events: aFiltered });
+					*/
+					return false;
+				},			
 			
 				retrieveSourceArrays: function(visibleStart,visibleEnd){
 					var oSources = {};
