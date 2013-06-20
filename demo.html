@@ -27,10 +27,24 @@
 			}
 		
 			$('#fcman').fcman({
+			
+				afterInit: function($this){
+					var x = new Date();
+					$(this).fcman("prefetchMonth",x,'month');					
+				},
+			
+			
 				retrieveSourceArrays: function(visibleStart,visibleEnd){
 					var oSources = {};
-					oSources.courses = [{id:'a',value:'b',source:'courses',region:'a'}];
-					oSources.events = [{id:'a',value:'b',source:'events',region:'b'}]
+					oSources.courses = [];
+					oSources.events = [];
+					oSources.dates = [];
+					
+					for (i = 0; i < 50000; ++i) {
+						oSources.courses.push({id:'a'+i,value:'b',source:'courses',region:'b,a',region2:'a,d',region3:'a,d',region4:'a,d'});
+						oSources.events.push({id:'a'+i,value:'b',source:'events',region:'c',region2:'a,d',region3:'a,d',region4:'a,d'});
+						oSources.dates.push({id:'a'+i,value:'b',source:'events',region:'c',region2:'a,d',region3:'a,d',region4:'a,d'});
+					}
 					return oSources;
 				},		
 				
@@ -42,7 +56,7 @@
 						oFilters.sources.values = 0;
 						oFilters.sources.dictionary = [];
 						oFilters.sources.numSelected = 1;
-						oFilters.sources.selectedArray = ['courses','events'];
+						oFilters.sources.selectedArray = ['courses','events','dates'];
 						oFilters.sources.applyGrep = true;
 						oFilters.sources.applyTo = ["courses","dates","availability", "resources"];
 						
@@ -51,17 +65,16 @@
 						oFilters.region.status = 0;
 						oFilters.region.values = ['a'];
 						oFilters.region.dictionary = [];
-						oFilters.region.numSelected = 1;
+						oFilters.region.numSelected = 2;
 						oFilters.region.selectedArray = ['courses','events'];
 						oFilters.region.applyGrep = true;
 						oFilters.region.applyTo = ["courses","events","availability", "resources"];						
-						
-						
 						
 					return oFilters
 				}	
 			
 			});
+			
 			$('#fcman').fcman("applyFiltersToView",myView);
 
 		});

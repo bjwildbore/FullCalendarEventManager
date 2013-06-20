@@ -406,7 +406,8 @@ function addCourses(dStart,dEnd){
 		    CAMLQuery: '<Query><OrderBy><FieldRef Name="Title" /></OrderBy></Query>',
 		    CAMLViewFields: "<ViewFields><FieldRef Name='ID' /><FieldRef Name='Title' /></ViewFields>",
 		    completefunc: function (xData, Status) {
-		      $(xData.responseXML).SPFilterNode("z:row").each(function() {					thisItem = {
+		      $(xData.responseXML).SPFilterNode("z:row").each(function() {					
+				thisItem = {
 					id:$(this).attr("ows_ID"),
 					title:$(this).attr("ows_Title")
 				};
