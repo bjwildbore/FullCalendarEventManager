@@ -20,7 +20,7 @@ Function to do what ever you like with the filtered array after it is filtered
 -retrieveSourceArrays
 function to retrieve data object of arrays that needs to be filtered
 example:
-<pre>
+```
 retrieveSourceArrays: function(visibleStart,visibleEnd){
 	//demo build dummy sources
 	// this array would be populated by some form of ajax webservice query or something similar
@@ -36,12 +36,12 @@ retrieveSourceArrays: function(visibleStart,visibleEnd){
 	}
 	return oSources;
 },	
-</pre>
+```
 
 -retrieveFilterObjects
 function to retrieve filter objects
 must contain a sources filter object 
-<pre>
+```
 retrieveFilterObjects: function($this){
 	//demo retrieve dummy filter objects and values
 	var oFilters = {};	
@@ -65,5 +65,5 @@ retrieveFilterObjects: function($this){
 		
 	return oFilters
 }	
-</pre>
+```
 
