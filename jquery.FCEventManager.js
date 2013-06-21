@@ -17,8 +17,8 @@
 			
 		},		
 
-		applyFiltersToView: function (view) {	
-			return applyFiltersToView($(this),view);			
+		applyFiltersToView: function (view,refetch) {	
+			return applyFiltersToView($(this),view,refetch);			
         },		
 
 		prefetchMonth: function (date,viewname) {
@@ -26,9 +26,9 @@
 			view.start = date;
 			view.name = viewname;			
 			
-			cacheAndLoadMonth($(this), view);		
+			cacheAndLoadMonth($(this), view, false);		
 			return true;			
-        },
+        },		
 		
 		clearCache: function () {
 			var $this = $(this);	
@@ -109,11 +109,11 @@
 		return d;
 	}	
 	
-	function applyFiltersToView($this,view){		
+	function applyFiltersToView($this,view,refetch){		
 		
 		var calendarSelector = '#' + $this.data('calendarID'),
 			start = new Date().getTime(),
-			aViewArray = cacheAndLoadMonth($this,view),	
+			aViewArray = cacheAndLoadMonth($this,view,refetch),	
 			end = new Date().getTime(),
 			aFiltered = filterArray($this,aViewArray ),
 			end2 = new Date().getTime(),
@@ -133,7 +133,7 @@
 
 	}		
 
-	function cacheAndLoadMonth($this,view){
+	function cacheAndLoadMonth($this,view,refetch){
 
 		var visStart = view.visStart,
 			visEnd = view.visEnd,
@@ -141,13 +141,14 @@
 			d = view.start,			
 			thisViewCode= view.name+'_'+ d.getFullYear()  +'_'+ (d.getMonth() + 1),			
 			aViewArray = eventsCache[thisViewCode];	
-
 			
-		if(!aViewArray ){
+			
+		if(!aViewArray || refetch ){ // refetch the events from the sources if refetch variable is true or the array is null
 			aViewArray = getMonthArray($this, visStart,visEnd);
 			eventsCache[thisViewCode] = aViewArray;
 			$this.data('eventsCache', eventsCache);
 		}	
+		
 
 		return aViewArray;
 	}
