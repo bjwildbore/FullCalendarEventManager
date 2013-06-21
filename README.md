@@ -17,6 +17,9 @@ Optional callback to perform once the plugin is initialised
 -afterFilter
 Function to do what ever you like with the filtered array after it is filtered
 
+-filterArrayItems
+Override the default function to allow for your own custom filtering.
+
 -retrieveSourceArrays
 function to retrieve data object of arrays that needs to be filtered
 example:

@@ -249,60 +249,14 @@ function filterArray($this,aSourceData,oFilters){
 		
 	if(aAppliedFilters.length === 0){
 		aFiltered = aTmp ;
-	} else {		
-		aFiltered = jQuery.grep(aTmp , function(element){
-			
-			var source = element.source,
-				i = 0,						
-				filter = '',
-				bFound = false,				
-				numOfNeedles = 0,
-				needle = '',
-				haystack = '',
-				filters = aAppliedFilters[source];
-			
-			if (!filters.length){
-				return true;
-			}
+	} else {
 
-			
-			for (i = 0; i < filters.length; i++){
-				filter = filters[i];
-				
-				needle = element[filter.key]; // the data element value(s)
-				haystack = filter.selectedArray;     // the filters allowed value(s)
-
-				numOfNeedles = needle.length;
-				
-				if(numOfNeedles ===1){
-					// looking for one item						
-					if(haystack.indexOf(needle[0]) === -1){						
-						return false;						
-					}
-				} else if (numOfNeedles !== 0){						
-									
-					//loop over numOfNeedles to find in haystacks
-					bFound = false;
-					for (i = 0; i < numOfNeedles ; i++){						
-						if(haystack.indexOf(needle[i]) > -1 ){						
-							bFound = true;
-							i = numOfNeedles ;												
-						}						
-					}
-					
-					if(!bFound){
-						return false;	
-					}											
-
-				} else {	
-					//do nothing at this stage - returns true for non specified needles
-				}
-				return true;
-				
-			}			
-			
-			return true;
-		});		
+		if (typeof $this.data('opts').filterArrayItems === 'function') {
+			aFiltered = $this.data('opts').filterArrayItems.call(this, $this,aTmp,aAppliedFilters);	
+		} else {
+			aFiltered = aTmp;		
+		}
+		
 	}	
 	return aFiltered;
 }	
@@ -313,7 +267,7 @@ function filterArray($this,aSourceData,oFilters){
 		} else if ( typeof method === 'object' || ! method ) {
 			return methods.init.apply( this, arguments );
 		} else {
-			$.error( 'Method ' +  method + ' does not exist on jQuery.tooltip' );
+			$.error( 'Method ' +  method + ' does not exist on plugin' );
 		}
 	};
 	
@@ -329,7 +283,7 @@ function filterArray($this,aSourceData,oFilters){
 			return false;
 		},
 
-		afterFilter: function($this,aFiltered){
+		afterFilter: function($this){
 			console.log('NOTE: afterFilter ');
 			/*
 			$(selector).fullCalendar('removeEvents');
@@ -348,7 +302,61 @@ function filterArray($this,aSourceData,oFilters){
 			console.log('ERROR: No function to retrieve filter values specified');
 			alert('ERROR: No function to retrieve filter values specified');
 			return false;
-		}	
+		},
+
+		filterArrayItems: function($this,aTmp, aAppliedFilters){
+			var aFiltered = jQuery.grep(aTmp , function(element){
+			
+				var source = element.source,
+					i = 0,						
+					filter = '',
+					bFound = false,				
+					numOfNeedles = 0,
+					needle = '',
+					haystack = '',
+					filters = aAppliedFilters[source];
+				
+				if (!filters.length){
+					return true;
+				}
+			
+				for (i = 0; i < filters.length; i++){
+					filter = filters[i];				
+					needle = element[filter.key]; // the data element value(s)
+					haystack = filter.selectedArray;     // the filters allowed value(s)
+					numOfNeedles = needle.length;
+					
+					if(numOfNeedles ===1){
+						// looking for one item						
+						if(haystack.indexOf(needle[0]) === -1){						
+							return false;						
+						}
+					} else if (numOfNeedles !== 0){						
+										
+						//loop over numOfNeedles to find in haystacks
+						bFound = false;
+						for (i = 0; i < numOfNeedles ; i++){						
+							if(haystack.indexOf(needle[i]) > -1 ){						
+								bFound = true;
+								i = numOfNeedles ;												
+							}						
+						}
+						
+						if(!bFound){
+							return false;	
+						}											
+
+					} else {	
+						//do nothing at this stage - returns true for non specified needles
+					}
+					return true;
+					
+				}				
+				return true;
+			});
+			return aFiltered;
+		},	
+		
 		
 	};	
 
