@@ -120,8 +120,8 @@
 			time1 = end - start,
 			time2 = end2 - start;
 			
-			console.log('load Execution time: ' + time1);
-			console.log('filter Execution time: ' + time2);
+			//console.log('load Execution time: ' + time1);
+			//console.log('filter Execution time: ' + time2);
 			//console.log('array to apply' ,aFiltered );			
 
 			if (typeof $this.data('opts').afterFilter === 'function') {
@@ -142,14 +142,14 @@
 			thisViewCode= view.name+'_'+ d.getFullYear()  +'_'+ (d.getMonth() + 1),			
 			aViewArray = eventsCache[thisViewCode];	
 			
-			
+		
 		if(!aViewArray || refetch ){ // refetch the events from the sources if refetch variable is true or the array is null
 			aViewArray = getMonthArray($this, visStart,visEnd);
 			eventsCache[thisViewCode] = aViewArray;
 			$this.data('eventsCache', eventsCache);
 		}	
-		
 
+		
 		return aViewArray;
 	}
 
@@ -178,7 +178,8 @@ function filterArray($this,aSourceData,oFilters){
 		aFiltered = [],
 		aTmp = [],
 		oTmp = {};
-		
+	
+
 		
 	if (typeof $this.data('opts').retrieveFilterObjects === 'function') {
         oFilters = $this.data('opts').retrieveFilterObjects.call(this, $this);	
@@ -201,13 +202,16 @@ function filterArray($this,aSourceData,oFilters){
 		for (i = 0; i < numSelected; i++){
 			source = selectedSources[i];
 			if(aSourceData[source].length){
-				oTmp[source] = aSourceData[source];
+				oTmp[source] = aSourceData[source].slice(0);
 				aAppliedFilters[source] = [];   
 			}		
 		}
 	}	
+	console.log('aSourceData',aSourceData)
 	//remove sources from the filters
 	delete oFilters.sources;	
+	
+
 	
 	//loop over the filters and remove any redundant sources and list filter to apply to each source to reduce filtering time
 	for (property in oFilters) {
@@ -241,10 +245,12 @@ function filterArray($this,aSourceData,oFilters){
 		}
 	}
 	
-	
+
 	//add sources into array that is to be filtered
+	//console.log('oTmp',oTmp);
 	for (source in oTmp) {
 		aTmp = aTmp.concat(oTmp[source]);
+		//console.log(oTmp[source])
 	}	
 		
 	if(aAppliedFilters.length === 0){
@@ -258,6 +264,7 @@ function filterArray($this,aSourceData,oFilters){
 		}
 		
 	}	
+	
 	return aFiltered;
 }	
 
@@ -307,7 +314,7 @@ function filterArray($this,aSourceData,oFilters){
 		filterArrayItems: function($this,aTmp, aAppliedFilters){
 			var aFiltered = jQuery.grep(aTmp , function(element){
 			
-				var source = element.source,
+				var source = element.sourceID,
 					i = 0,						
 					filter = '',
 					bFound = false,				
@@ -315,25 +322,34 @@ function filterArray($this,aSourceData,oFilters){
 					needle = '',
 					haystack = '',
 					filters = aAppliedFilters[source];
+					
 				
 				if (!filters.length){
 					return true;
 				}
+				//console.log(filters)
 			
 				for (i = 0; i < filters.length; i++){
-					filter = filters[i];				
+					
+					filter = filters[i];
+					//console.log('filter',filter);					
 					needle = element[filter.key]; // the data element value(s)
+					
 					haystack = filter.selectedArray;     // the filters allowed value(s)
 					numOfNeedles = needle.length;
+					//console.log(needle,haystack,numOfNeedles)
 					
 					if(numOfNeedles ===1){
-						// looking for one item						
+						// looking for one item	
+						console.log('oneItem');
 						if(haystack.indexOf(needle[0]) === -1){						
+							//console.log('denied');
 							return false;						
 						}
 					} else if (numOfNeedles !== 0){						
 										
 						//loop over numOfNeedles to find in haystacks
+						//console.log('lotsaItems');
 						bFound = false;
 						for (i = 0; i < numOfNeedles ; i++){						
 							if(haystack.indexOf(needle[i]) > -1 ){						
@@ -347,13 +363,16 @@ function filterArray($this,aSourceData,oFilters){
 						}											
 
 					} else {	
+						//console.log('noItems');
 						//do nothing at this stage - returns true for non specified needles
 					}
-					return true;
+					
+					//console.log('itemALlowed');					
 					
 				}				
 				return true;
 			});
+			//console.log('aFiltered',aFiltered)
 			return aFiltered;
 		},	
 		
