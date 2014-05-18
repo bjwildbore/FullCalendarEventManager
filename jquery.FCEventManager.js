@@ -26,7 +26,7 @@
 			view.start = date;
 			view.name = viewname;			
 			
-			cacheAndLoadMonth($(this), view, false);		
+			cacheAndLoadPeriod($(this), view, false);		
 			return true;			
         },		
 		
@@ -113,11 +113,12 @@
 		
 		var calendarSelector = '#' + $this.data('calendarID'),
 			start = new Date().getTime(),
-			aViewArray = cacheAndLoadMonth($this,view,refetch),	
+			aViewArray = cacheAndLoadPeriod($this,view,refetch),	
 			end = new Date().getTime(),
+			time1 = end - start,
 			aFiltered = filterArray($this,aViewArray ),
 			end2 = new Date().getTime(),
-			time1 = end - start,
+			
 			time2 = end2 - start;
 			
 			//console.log('load Execution time: ' + time1);
@@ -133,18 +134,30 @@
 
 	}		
 
-	function cacheAndLoadMonth($this,view,refetch){
+	function cacheAndLoadPeriod($this,view,refetch){
 
 		var visStart = view.visStart,
 			visEnd = view.visEnd,
 			eventsCache = $this.data('eventsCache'),
 			d = view.start,			
-			thisViewCode= view.name+'_'+ d.getFullYear()  +'_'+ (d.getMonth() + 1),			
-			aViewArray = eventsCache[thisViewCode];	
-			
+			thisViewCode = view.name+'_'+ d.getFullYear()  +'_'+ (d.getMonth() + 1),			
+			aViewArray = [];	
+	
+		switch(view.name) {
+			case "basicDay":
+			    thisViewCode= view.name+'_'+ d.getFullYear()  +'_'+ (d.getMonth() + 1)+'_'+ d.getDate();					
+			    break;
+			case "basicWeek":
+			    thisViewCode= view.name+'_'+ d.getFullYear()  +'_'+ getWeekNumber(d);					
+			    break;
+			default:
+			    thisViewCode= view.name+'_'+ d.getFullYear()  +'_'+ (d.getMonth() + 1);					
+		}
+		
+		aViewArray = eventsCache[thisViewCode];	
 		
 		if(!aViewArray || refetch ){ // refetch the events from the sources if refetch variable is true or the array is null
-			aViewArray = getMonthArray($this, visStart,visEnd);
+			aViewArray = getPeriodData($this, visStart,visEnd);
 			eventsCache[thisViewCode] = aViewArray;
 			$this.data('eventsCache', eventsCache);
 		}	
@@ -154,7 +167,7 @@
 	}
 
 
-	function getMonthArray($this,visStart,visEnd){
+	function getPeriodData($this,visStart,visEnd){
 		var aTmp = {};
 
 		if (typeof $this.data('opts').retrieveSourceArrays === 'function') {
@@ -163,6 +176,22 @@
 		
 		return aTmp ;
 	}
+
+
+function getWeekNumber(d) {
+    // Copy date so don't modify original
+    d = new Date(+d);
+    d.setHours(0,0,0);
+    // Set to nearest Thursday: current date + 4 - current day number
+    // Make Sunday's day number 7
+    d.setDate(d.getDate() + 4 - (d.getDay()||7));
+    // Get first day of year
+    var yearStart = new Date(d.getFullYear(),0,1);
+    // Calculate full weeks to nearest Thursday
+    var weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7)
+    // Return array of year and week number
+    return weekNo;
+}
 
 
 function filterArray($this,aSourceData,oFilters){
@@ -207,7 +236,7 @@ function filterArray($this,aSourceData,oFilters){
 			}		
 		}
 	}	
-	console.log('aSourceData',aSourceData)
+	//console.log('aSourceData',aSourceData)
 	//remove sources from the filters
 	delete oFilters.sources;	
 	
@@ -285,13 +314,13 @@ function filterArray($this,aSourceData,oFilters){
 		},	
 		
 		afterInit: function(){
-			console.log('NOTE: No after afterInit function ');
+			//console.log('NOTE: No after afterInit function ');
 			//alert('ERROR: No afterInit specified');
 			return false;
 		},
 
 		afterFilter: function($this){
-			console.log('NOTE: afterFilter ');
+			//console.log('NOTE: afterFilter ');
 			/*
 			$(selector).fullCalendar('removeEvents');
 			$(selector).fullCalendar('addEventSource', {events: aFiltered });
@@ -300,20 +329,25 @@ function filterArray($this,aSourceData,oFilters){
 		},
 		
 		retrieveSourceArrays: function(){
-			console.log('ERROR: No function to retrieve filter values specified');
+			//console.log('ERROR: No function to retrieve filter values specified');
 			alert('ERROR: No function to retrieve filter values specified');
 			return false;
 		},		
 		
 		retrieveFilterObjects: function(){
-			console.log('ERROR: No function to retrieve filter values specified');
+			//console.log('ERROR: No function to retrieve filter values specified');
 			alert('ERROR: No function to retrieve filter values specified');
 			return false;
 		},
 
 		filterArrayItems: function($this,aTmp, aAppliedFilters){
+			//console.log('filterArrayItems')
+			//console.log('aTmp',aTmp )
+			//console.log('aAppliedFilters', aAppliedFilters)
+
 			var aFiltered = jQuery.grep(aTmp , function(element){
-			
+				//console.log('grep', element)
+
 				var source = element.sourceID,
 					i = 0,						
 					filter = '',
@@ -323,7 +357,8 @@ function filterArray($this,aSourceData,oFilters){
 					haystack = '',
 					filters = aAppliedFilters[source];
 					
-				
+				//console.log(filters)
+
 				if (!filters.length){
 					return true;
 				}
@@ -334,14 +369,30 @@ function filterArray($this,aSourceData,oFilters){
 					filter = filters[i];
 					//console.log('filter',filter);					
 					needle = element[filter.key]; // the data element value(s)
-					
+					if( typeof(needle) === 'undefined'){
+						needle = '';
+					}
 					haystack = filter.selectedArray;     // the filters allowed value(s)
+
+						//console.log('needle:',needle);
+						//console.log('haystack',haystack);
+
 					numOfNeedles = needle.length;
 					//console.log(needle,haystack,numOfNeedles)
 					
 					if(numOfNeedles ===1){
 						// looking for one item	
-						console.log('oneItem');
+						//console.log('oneItem');
+						if(needle== ''){						
+							needle= ['[Empty]'];
+						} 
+						
+						//console.log('needle:',needle);
+						//console.log('haystack',haystack);
+						//console.log('idx',haystack.indexOf(needle[0]));
+
+
+						
 						if(haystack.indexOf(needle[0]) === -1){						
 							//console.log('denied');
 							return false;						
@@ -394,7 +445,7 @@ function CalendarItem(){
 	this.tutorids = '';		
 	this.type = '';
 	this.status = '';
-	
+	this.extra = '';
 	this.className = '';
 	this.url = '';
 	
